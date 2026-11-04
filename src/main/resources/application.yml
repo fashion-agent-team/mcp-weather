@@ -1,0 +1,31 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: mcp-weather
+  ai:
+    mcp:
+      server:
+        name: mcp-weather
+        version: 0.1.0
+        type: sync
+        protocol: streamable
+        streamable-http:
+          mcp-endpoint: /mcp
+        instructions: 오늘 날씨 데이터를 돌려주는 서버입니다. 판단은 하지 않고 숫자와 참고값만 줍니다.
+  cache:
+    cache-names: weatherToday
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=30m
+
+weather:
+  open-meteo:
+    base-url: https://api.open-meteo.com
+    timeout: 10s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
