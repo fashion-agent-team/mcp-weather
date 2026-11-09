@@ -13,9 +13,9 @@ spring:
         protocol: streamable
         streamable-http:
           mcp-endpoint: /mcp
-        instructions: 오늘 날씨 데이터를 돌려주는 서버입니다. 판단은 하지 않고 숫자와 참고값만 줍니다.
+        instructions: 오늘 날씨와 16일 안쪽 날짜별 예보 데이터를 돌려주는 서버입니다. 판단은 하지 않고 숫자와 참고값만 줍니다.
   cache:
-    cache-names: weatherToday
+    cache-names: weatherToday,weatherForecast
     caffeine:
       spec: maximumSize=1000,expireAfterWrite=30m
 

@@ -19,6 +19,11 @@ final class Samples {
         return forecast(12.4, 10.6, 0, 10);
     }
 
+    static OpenMeteoDaily daily(String date) {
+        return new OpenMeteoDaily(new OpenMeteoDaily.Daily(List.of(date), List.of(61), List.of(14.0), List.of(4.0),
+                List.of(12.0), List.of(1.0), List.of(80)));
+    }
+
     static final String JSON = """
             {
               "latitude": 37.56, "longitude": 126.98,

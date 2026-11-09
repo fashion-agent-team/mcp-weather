@@ -56,8 +56,8 @@ class McpServerTest {
     @SuppressWarnings("unchecked")
     void toolsListHasWeatherToday() {
         var tools = client.listTools().tools();
-        assertThat(tools).extracting(McpSchema.Tool::name).containsExactly("weather_today");
-        var tool = tools.getFirst();
+        assertThat(tools).extracting(McpSchema.Tool::name).containsExactlyInAnyOrder("weather_today", "weather_forecast");
+        var tool = tools.stream().filter(t -> t.name().equals("weather_today")).findFirst().orElseThrow();
         assertThat(tool.description()).contains("오늘 뭐 입지");
         assertThat((Map<String, Object>) tool.inputSchema().get("properties")).containsKeys("lat", "lon");
         assertThat((List<String>) tool.inputSchema().get("required")).contains("lat", "lon");
@@ -85,6 +85,23 @@ class McpServerTest {
         when(openMeteo.forecast(anyDouble(), anyDouble())).thenThrow(new IllegalStateException("boom"));
         var text = ((McpSchema.TextContent) call(10, 10).content().getFirst()).text();
         assertThat(text).contains("\"code\":\"upstream_failed\"");
+    }
+
+    @Test
+    @DisplayName("tools call weather forecast는 날짜를 받는다")
+    @SuppressWarnings("unchecked")
+    void toolsCallForecastTakesDate() {
+        var tool = client.listTools().tools().stream().filter(t -> t.name().equals("weather_forecast")).findFirst()
+                .orElseThrow();
+        assertThat((List<String>) tool.inputSchema().get("required")).contains("lat", "lon", "date");
+        var date = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Seoul")).plusDays(3);
+        when(openMeteo.daily(37.57, 126.98, date)).thenReturn(Samples.daily(date.toString()));
+
+        var result = client.callTool(new McpSchema.CallToolRequest("weather_forecast",
+                Map.of("lat", 37.5665, "lon", 126.9780, "date", date.toString())));
+
+        var text = ((McpSchema.TextContent) result.content().getFirst()).text();
+        assertThat(text).contains("\"date\":\"" + date + "\"", "\"condition\":\"비\"", "\"needsUmbrella\":true");
     }
 
     @Test
