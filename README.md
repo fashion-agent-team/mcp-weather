@@ -15,6 +15,7 @@
 | 도구 | 하는 일 |
 | --- | --- |
 | `weather_today` | 오늘 기온·체감 온도·최저/최고·일교차·강수 확률·날씨 상태 (+ 날씨 묻기용 참고값 needsOuter, needsUmbrella, clothingAdvice) |
+| `weather_forecast` | 날짜(YYYY-MM-DD) 하루 예보: 최저/최고·일교차·체감(최고·최저 체감의 가운데)·강수 확률·날씨 상태 + 같은 참고값. 오늘부터 16일 안쪽만, 그 밖은 `out_of_range` |
 
 입출력 JSON은 [MCP 도구 입출력](https://github.com/fashion-agent-team/fashion-agent/blob/develop/docs/contracts/mcp-tools.md)를 그대로 따릅니다.
 
@@ -28,6 +29,7 @@
 
 - [x] Spring Boot + Spring AI MCP Server 뼈대, `/mcp`, `/actuator/health`, Dockerfile
 - [x] `weather_today` (Open-Meteo 호출, 앱 코드 옮기기)
+- [x] `weather_forecast` (날짜별 예보, "11월 20일 일정에 맞는 옷" 추천용)
 - [x] 단위 테스트 (날씨 코드·옷차림 힌트)
 - [x] PR마다 자동 테스트 (GitHub Actions `CI`)
 - [x] Docker 이미지 자동 빌드·올리기 (`ghcr.io/fashion-agent-team/mcp-weather`)

@@ -1,6 +1,7 @@
 package com.fashionagent.weather;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -43,5 +44,21 @@ public class OpenMeteoClient {
                         .build())
                 .retrieve()
                 .body(OpenMeteoForecast.class);
+    }
+
+    /** 날짜 하루의 예보(daily). Open-Meteo는 오늘부터 16일 안쪽만 준다. */
+    public OpenMeteoDaily daily(double lat, double lon, LocalDate date) {
+        return restClient.get()
+                .uri(uri -> uri.path("/v1/forecast")
+                        .queryParam("latitude", lat)
+                        .queryParam("longitude", lon)
+                        .queryParam("daily", "weather_code,temperature_2m_max,temperature_2m_min,"
+                                + "apparent_temperature_max,apparent_temperature_min,precipitation_probability_max")
+                        .queryParam("timezone", "Asia/Seoul")
+                        .queryParam("start_date", date.toString())
+                        .queryParam("end_date", date.toString())
+                        .build())
+                .retrieve()
+                .body(OpenMeteoDaily.class);
     }
 }
