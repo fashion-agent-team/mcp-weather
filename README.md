@@ -22,13 +22,21 @@
 
 - **데이터만 돌려줍니다.** "이 옷이 날씨에 맞나"는 agent가 Gemini로 판단합니다(예전 `suggest_by_weather` 같은 판단 도구는 없음).
 - 같은 위치(소수점 2자리)는 30분 캐시.
-- 옮길 코드: 앱 레포 `lib/services/weather_service.dart`, `lib/models/weather.dart`(날씨 코드 → 한국어 상태, 옷차림 힌트), 테스트 `test/weather_test.dart`.
+- 옮긴 코드: 앱 레포 `lib/services/weather_service.dart`, `lib/models/weather.dart`(날씨 코드 → 한국어 상태, 옷차림 힌트), 테스트 `test/weather_test.dart`.
 
 ## 할 일
 
-- [ ] Spring Boot + Spring AI MCP Server 뼈대, `/mcp`, `/actuator/health`, Dockerfile
-- [ ] `weather_today` (Open-Meteo 호출, 앱 코드 옮기기)
-- [ ] 단위 테스트 (날씨 코드·옷차림 힌트)
+- [x] Spring Boot + Spring AI MCP Server 뼈대, `/mcp`, `/actuator/health`, Dockerfile
+- [x] `weather_today` (Open-Meteo 호출, 앱 코드 옮기기)
+- [x] 단위 테스트 (날씨 코드·옷차림 힌트)
+- [x] PR마다 자동 테스트 (GitHub Actions `CI`)
+- [x] Docker 이미지 자동 빌드·올리기 (`ghcr.io/fashion-agent-team/mcp-weather`)
+
+## 실행과 이미지
+
+- 로컬: `./gradlew bootRun` → `http://localhost:8091/mcp`. 자세한 방법은 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+- 이미지: `develop`에 합쳐지면 `ghcr.io/fashion-agent-team/mcp-weather:dev`, `main`에 합쳐지면 `:latest`로 자동으로 올라갑니다(GitHub Actions `Docker`). PR에서는 이미지를 빌드만 해서 Dockerfile이 깨지지 않았는지 봅니다.
+- 받기: `docker pull ghcr.io/fashion-agent-team/mcp-weather:dev`
 
 ## 공통 약속
 
