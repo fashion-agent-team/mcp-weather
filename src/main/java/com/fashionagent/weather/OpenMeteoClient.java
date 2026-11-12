@@ -2,10 +2,14 @@ package com.fashionagent.weather;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 /**
@@ -15,12 +19,21 @@ import org.springframework.web.client.RestClient;
 @Component
 public class OpenMeteoClient {
 
+    private static final Logger log = LoggerFactory.getLogger(OpenMeteoClient.class);
+
+    /**
+     * 연결이 끊기거나(connection reset) 시간이 넘으면 이만큼 쉬고 다시 묻는다. 한 번에 기다리는 시간을 4초로 줄여
+     * 세 번 물어도 13초 안팎이라 agent가 25초 안에 답할 수 있다. Open-Meteo는 보통 1초 안에 답한다.
+     * 2026-11-12 시뮬: 클라우드 컨테이너에서 연결이 세 번에 두 번꼴로 끊기고, 가끔 10초 동안 답이 없었다.
+     */
+    static final long[] BACKOFF_MS = {200, 600};
+
     private final RestClient restClient;
 
     @Autowired
     public OpenMeteoClient(RestClient.Builder builder,
             @Value("${weather.open-meteo.base-url:https://api.open-meteo.com}") String baseUrl,
-            @Value("${weather.open-meteo.timeout:10s}") Duration timeout) {
+            @Value("${weather.open-meteo.timeout:4s}") Duration timeout) {
         var requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(timeout);
         requestFactory.setReadTimeout(timeout);
@@ -33,7 +46,7 @@ public class OpenMeteoClient {
     }
 
     public OpenMeteoForecast forecast(double lat, double lon) {
-        return restClient.get()
+        return withRetry(() -> restClient.get()
                 .uri(uri -> uri.path("/v1/forecast")
                         .queryParam("latitude", lat)
                         .queryParam("longitude", lon)
@@ -43,12 +56,12 @@ public class OpenMeteoClient {
                         .queryParam("forecast_days", 1)
                         .build())
                 .retrieve()
-                .body(OpenMeteoForecast.class);
+                .body(OpenMeteoForecast.class));
     }
 
     /** 날짜 하루의 예보(daily). Open-Meteo는 오늘부터 16일 안쪽만 준다. */
     public OpenMeteoDaily daily(double lat, double lon, LocalDate date) {
-        return restClient.get()
+        return withRetry(() -> restClient.get()
                 .uri(uri -> uri.path("/v1/forecast")
                         .queryParam("latitude", lat)
                         .queryParam("longitude", lon)
@@ -59,6 +72,25 @@ public class OpenMeteoClient {
                         .queryParam("end_date", date.toString())
                         .build())
                 .retrieve()
-                .body(OpenMeteoDaily.class);
+                .body(OpenMeteoDaily.class));
+    }
+
+    static <T> T withRetry(Supplier<T> call) {
+        for (int attempt = 0; ; attempt++) {
+            try {
+                return call.get();
+            } catch (ResourceAccessException e) {
+                if (attempt >= BACKOFF_MS.length) {
+                    throw e;
+                }
+                log.info("Open-Meteo 연결이 끊기거나 늦어 다시 물어요 ({}번째): {}", attempt + 1, e.getMessage());
+                try {
+                    Thread.sleep(BACKOFF_MS[attempt]);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+            }
+        }
     }
 }
