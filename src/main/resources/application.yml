@@ -22,7 +22,7 @@ spring:
 weather:
   open-meteo:
     base-url: https://api.open-meteo.com
-    timeout: 10s
+    timeout: 4s   # 한 번에 기다리는 시간. 끊기거나 늦으면 두 번 더 물음(OpenMeteoClient)
 
 management:
   endpoints:

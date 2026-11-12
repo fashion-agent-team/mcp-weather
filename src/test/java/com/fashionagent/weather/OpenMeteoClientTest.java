@@ -78,11 +78,13 @@ class OpenMeteoClientTest {
     }
 
     @Test
-    @DisplayName("시간 초과는 다시 묻지 않는다(agent가 기다리는 시간 안에 답하려고)")
-    void noRetryOnTimeout() {
+    @DisplayName("시간 초과도 다시 묻는다(한 번에 4초라 세 번이어도 agent 25초 안)")
+    void retriesOnTimeout() {
         server.expect(ExpectedCount.once(), requestTo(startsWith("https://api.open-meteo.com/v1/forecast")))
                 .andRespond(withException(new SocketTimeoutException("Read timed out")));
-        assertThatThrownBy(() -> client.forecast(37.5, 127.0)).isInstanceOf(ResourceAccessException.class);
+        server.expect(requestTo(startsWith("https://api.open-meteo.com/v1/forecast")))
+                .andRespond(withSuccess(Samples.JSON, MediaType.APPLICATION_JSON));
+        assertThat(client.forecast(37.5, 127.0).current().weatherCode()).isZero();
         server.verify();
     }
 }
