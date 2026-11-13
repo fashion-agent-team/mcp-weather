@@ -33,7 +33,7 @@ public class OpenMeteoClient {
     @Autowired
     public OpenMeteoClient(RestClient.Builder builder,
             @Value("${weather.open-meteo.base-url:https://api.open-meteo.com}") String baseUrl,
-            @Value("${weather.open-meteo.timeout:4s}") Duration timeout) {
+            @Value("${weather.open-meteo.timeout:3s}") Duration timeout) {
         var requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(timeout);
         requestFactory.setReadTimeout(timeout);
@@ -80,7 +80,9 @@ public class OpenMeteoClient {
             try {
                 return call.get();
             } catch (ResourceAccessException e) {
-                if (attempt >= BACKOFF_MS.length) {
+                // 시간 초과는 다시 묻지 않고 바로 MET Norway로 넘깁니다. 2026-11-13 젯슨: Open-Meteo가 늦을 때
+                // 세 번(4초씩) 다 기다리느라 첫 옷 추천이 20초 걸렸음. 끊김(connection reset)은 빨리 끝나서 그대로 다시 묻습니다.
+                if (attempt >= BACKOFF_MS.length || e.getCause() instanceof java.net.SocketTimeoutException) {
                     throw e;
                 }
                 log.info("Open-Meteo 연결이 끊기거나 늦어 다시 물어요 ({}번째): {}", attempt + 1, e.getMessage());

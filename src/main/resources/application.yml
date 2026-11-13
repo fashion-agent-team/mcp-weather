@@ -22,7 +22,7 @@ spring:
 weather:
   open-meteo:
     base-url: https://api.open-meteo.com
-    timeout: 4s   # 한 번에 기다리는 시간. 끊기거나 늦으면 두 번 더 물음(OpenMeteoClient)
+    timeout: 3s   # 한 번에 기다리는 시간. 끊기면 두 번 더 묻고, 늦으면 바로 MET Norway(OpenMeteoClient)
   met-no:         # Open-Meteo가 안 될 때 대신 묻는 곳(MET Norway, 키 없음)
     base-url: https://api.met.no
     timeout: 4s
