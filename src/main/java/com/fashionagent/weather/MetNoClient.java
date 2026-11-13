@@ -20,7 +20,7 @@ import org.springframework.web.client.RestClient;
  * 2026-11-13 api.open-meteo.com(51.81.167.44)이 젯슨·맥·클라우드 어디서나 연결 시간 초과였고, api.met.no는 젯슨에서 닿았다.
  *
  * <p>응답을 Open-Meteo 모양(OpenMeteoForecast·OpenMeteoDaily)으로 바꿔서 WeatherToday·WeatherDay를 그대로 쓴다.
- * 체감 온도는 Open-Meteo와 같은 Steadman 식(기온·습도·바람)으로 계산한다. 이용 약관상 User-Agent에 앱 이름과 주소를 넣는다.
+ * 체감 온도는 MET의 apparent_air_temperature를 쓰고, 없으면 Open-Meteo와 같은 Steadman 식(기온·습도·바람)으로 계산한다. 이용 약관상 User-Agent에 앱 이름과 주소를 넣는다.
  */
 @Component
 public class MetNoClient {
@@ -64,7 +64,7 @@ public class MetNoClient {
         var d = now.data().instant().details();
         double t = d.airTemperature();
         Day day = day(steps, today);
-        var current = new OpenMeteoForecast.Current(t, round1(apparent(t, d.relativeHumidity(), d.windSpeed())),
+        var current = new OpenMeteoForecast.Current(t, round1(apparent(d)),
                 wmo(symbol(now)));
         var daily = new OpenMeteoForecast.Daily(List.of(day.max), List.of(day.min), List.of(day.rain));
         return new OpenMeteoForecast(current, daily);
@@ -106,14 +106,27 @@ public class MetNoClient {
             }
             found++;
             double t = d.airTemperature();
-            double a = apparent(t, d.relativeHumidity(), d.windSpeed());
+            double a = apparent(d);
             min = Math.min(min, t);
             max = Math.max(max, t);
             aMin = Math.min(aMin, a);
             aMax = Math.max(aMax, a);
-            for (var p : java.util.Arrays.asList(s.data().next1Hours(), s.data().next6Hours())) {
-                if (p != null && p.details() != null && p.details().probabilityOfPrecipitation() != null) {
-                    rain = Math.max(rain, (int) Math.round(p.details().probabilityOfPrecipitation()));
+            var p1 = s.data().next1Hours();
+            var p6 = s.data().next6Hours();
+            // 6시간 값은 그 6시간이 같은 날 안에 끝날 때만 쓴다(밤 11시의 6시간은 내일 새벽 비까지 들어감).
+            OffsetDateTime at = OffsetDateTime.parse(s.time());
+            boolean p6InDay = at.plusHours(6).atZoneSameInstant(SEOUL).toLocalDate().equals(date)
+                    || at.plusHours(6).atZoneSameInstant(SEOUL).toLocalTime().equals(java.time.LocalTime.MIDNIGHT);
+            rain = Math.max(rain, rainChance(p1, 1));
+            if (p6InDay) {
+                rain = Math.max(rain, rainChance(p6, 6));
+            }
+            if (p6InDay && p6 != null && p6.details() != null) {
+                if (p6.details().airTemperatureMax() != null) {
+                    max = Math.max(max, p6.details().airTemperatureMax());
+                }
+                if (p6.details().airTemperatureMin() != null) {
+                    min = Math.min(min, p6.details().airTemperatureMin());
                 }
             }
             code = Math.max(code, wmo(symbol(s)));
@@ -154,6 +167,29 @@ public class MetNoClient {
         };
     }
 
+    /**
+     * 강수 확률. MET가 주면 그 값, 아니면(한국 좌표는 보통 안 줌) 예상 강수량으로 어림한다:
+     * 0mm → 0, 조금(1시간 0.1mm·6시간 0.5mm 미만) → 40, 그 이상 → 80. 우산 기준은 50%라 "조금"은 우산 없이, 그 이상은 우산.
+     */
+    static int rainChance(MetNoResponse.Period p, int hours) {
+        if (p == null || p.details() == null) {
+            return 0;
+        }
+        if (p.details().probabilityOfPrecipitation() != null) {
+            return (int) Math.round(p.details().probabilityOfPrecipitation());
+        }
+        Double mm = p.details().precipitationAmount();
+        if (mm == null || mm <= 0) {
+            return 0;
+        }
+        return mm < (hours == 1 ? 0.1 : 0.5) ? 40 : 80;
+    }
+
+    static double apparent(MetNoResponse.InstantDetails d) {
+        return d.apparentAirTemperature() != null ? d.apparentAirTemperature()
+                : apparent(d.airTemperature(), d.relativeHumidity(), d.windSpeed());
+    }
+
     /** Open-Meteo와 같은 Steadman 체감 온도: Ta + 0.33e − 0.70ws − 4.00 (e: 수증기압 hPa, ws: m/s). 습도·바람이 없으면 기온. */
     static double apparent(double t, Double humidity, Double wind) {
         if (humidity == null || wind == null) {
@@ -188,6 +224,7 @@ public class MetNoClient {
 
         @JsonIgnoreProperties(ignoreUnknown = true)
         record InstantDetails(@JsonProperty("air_temperature") Double airTemperature,
+                @JsonProperty("apparent_air_temperature") Double apparentAirTemperature,
                 @JsonProperty("relative_humidity") Double relativeHumidity,
                 @JsonProperty("wind_speed") Double windSpeed) {
         }
@@ -201,7 +238,10 @@ public class MetNoClient {
         }
 
         @JsonIgnoreProperties(ignoreUnknown = true)
-        record PeriodDetails(@JsonProperty("probability_of_precipitation") Double probabilityOfPrecipitation) {
+        record PeriodDetails(@JsonProperty("probability_of_precipitation") Double probabilityOfPrecipitation,
+                @JsonProperty("precipitation_amount") Double precipitationAmount,
+                @JsonProperty("air_temperature_max") Double airTemperatureMax,
+                @JsonProperty("air_temperature_min") Double airTemperatureMin) {
         }
     }
 }

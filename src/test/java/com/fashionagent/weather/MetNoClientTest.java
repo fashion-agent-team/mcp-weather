@@ -101,4 +101,41 @@ class MetNoClientTest {
         assertThat(MetNoClient.wmo("fog")).isEqualTo(45);
         assertThat(WeatherRules.condition(MetNoClient.wmo("sleet"))).isEqualTo("비");
     }
+
+    @Test
+    @DisplayName("강수 확률이 없으면(한국 좌표) 강수량으로 어림, 체감 온도는 MET 값")
+    void rainFromAmount() {
+        String json = """
+                {"properties":{"timeseries":[
+                 {"time":"2026-11-13T01:00:00Z","data":{
+                   "instant":{"details":{"air_temperature":11.8,"apparent_air_temperature":11.6,"relative_humidity":83.6,"wind_speed":1.5}},
+                   "next_1_hours":{"summary":{"symbol_code":"partlycloudy_day"},"details":{"precipitation_amount":0.0}},
+                   "next_6_hours":{"summary":{"symbol_code":"rain"},"details":{"air_temperature_max":15.4,"air_temperature_min":11.0,"precipitation_amount":2.3}}}}
+                ]}}
+                """;
+        server.expect(requestTo(startsWith("https://api.met.no/"))).andRespond(withSuccess(json, MediaType.APPLICATION_JSON));
+        var w = WeatherToday.from(client.forecast(37.57, 126.98, LocalDate.of(2026, 11, 13)));
+        assertThat(w.apparentTemperature()).isEqualTo(11.6);
+        assertThat(w.maxTemperature()).isEqualTo(15.4);
+        assertThat(w.minTemperature()).isEqualTo(11.0);
+        assertThat(w.precipitationProbability()).isEqualTo(80);
+        assertThat(w.needsUmbrella()).isTrue();
+    }
+
+    @Test
+    @DisplayName("실제 api.met.no 응답(로컬 파일이 있을 때만)")
+    void realSample() throws Exception {
+        var path = java.nio.file.Path.of(System.getProperty("metno.sample", "/tmp/claude-0/metno-real.json"));
+        org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.exists(path));
+        server.expect(requestTo(startsWith("https://api.met.no/")))
+                .andRespond(withSuccess(java.nio.file.Files.readString(path), MediaType.APPLICATION_JSON));
+        var w = WeatherToday.from(client.forecast(37.57, 126.98, LocalDate.of(2026, 11, 13)));
+        System.out.println("REAL today " + w);
+        server.reset();
+        server.expect(requestTo(startsWith("https://api.met.no/")))
+                .andRespond(withSuccess(java.nio.file.Files.readString(path), MediaType.APPLICATION_JSON));
+        var d = WeatherDay.from(client.daily(37.57, 126.98, LocalDate.of(2026, 11, 20)));
+        System.out.println("REAL 11-20 " + d);
+        assertThat(w.maxTemperature()).isGreaterThanOrEqualTo(w.minTemperature());
+    }
 }
