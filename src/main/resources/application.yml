@@ -23,6 +23,11 @@ weather:
   open-meteo:
     base-url: https://api.open-meteo.com
     timeout: 4s   # 한 번에 기다리는 시간. 끊기거나 늦으면 두 번 더 물음(OpenMeteoClient)
+  met-no:         # Open-Meteo가 안 될 때 대신 묻는 곳(MET Norway, 키 없음)
+    base-url: https://api.met.no
+    timeout: 4s
+  fallback:
+    skip-for: 5m  # Open-Meteo가 실패하면 이 동안은 바로 MET Norway
 
 management:
   endpoints:
