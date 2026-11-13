@@ -24,7 +24,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestClient;
 
 /** 실제로 서버를 띄우고 MCP 클라이언트로 /mcp에 붙어 본다(agent가 붙는 방식과 같음). */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "weather.fallback.skip-for=0s")
 class McpServerTest {
 
     @LocalServerPort
@@ -32,6 +33,10 @@ class McpServerTest {
 
     @MockitoBean
     OpenMeteoClient openMeteo;
+
+    /** 대체 출처는 실제로 부르지 않는다(값 없음 = 실패). */
+    @MockitoBean
+    MetNoClient metNo;
 
     @Autowired
     CacheManager cacheManager;
