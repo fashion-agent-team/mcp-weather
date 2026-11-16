@@ -46,7 +46,7 @@ public record WeatherDay(
                 max,
                 range,
                 precipitation,
-                WeatherRules.needsOuter(apparent, range),
+                WeatherRules.needsOuter(apparent, range, min),
                 WeatherRules.needsUmbrella(precipitation, condition),
                 WeatherRules.clothingAdvice(apparent));
     }
