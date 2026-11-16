@@ -47,12 +47,20 @@ class WeatherRulesTest {
     }
 
     @Test
-    @DisplayName("체감 20도 미만이거나 일교차 10도 이상이면 겉옷")
+    @DisplayName("체감 20도 미만이거나, 쌀쌀한 날 일교차 10도 이상이면 겉옷")
     void outerWhenColdOrBigRange() {
-        assertThat(WeatherRules.needsOuter(19.9, 5)).isTrue();
-        assertThat(WeatherRules.needsOuter(20, 5)).isFalse();
-        assertThat(WeatherRules.needsOuter(25, 10)).isTrue();
-        assertThat(WeatherRules.needsOuter(25, 9.6)).isTrue();   // 앱처럼 반올림해서 본다
-        assertThat(WeatherRules.needsOuter(25, 9.4)).isFalse();
+        assertThat(WeatherRules.needsOuter(19.9, 5, 15)).isTrue();
+        assertThat(WeatherRules.needsOuter(20, 5, 15)).isFalse();
+        assertThat(WeatherRules.needsOuter(25, 10, 15)).isTrue();
+        assertThat(WeatherRules.needsOuter(25, 9.6, 15)).isTrue();   // 앱처럼 반올림해서 본다
+        assertThat(WeatherRules.needsOuter(25, 9.4, 15)).isFalse();
+    }
+
+    @Test
+    @DisplayName("더운 날(최저 20도 이상)은 일교차가 커도 겉옷 아님")
+    void noOuterOnHotDayEvenWithBigRange() {
+        assertThat(WeatherRules.needsOuter(33, 11, 28)).isFalse();   // 최저 28도, 최고 39도
+        assertThat(WeatherRules.needsOuter(26, 12, 20)).isFalse();   // 최저가 딱 20도
+        assertThat(WeatherRules.needsOuter(24, 12, 19.5)).isTrue();  // 아침이 쌀쌀함
     }
 }

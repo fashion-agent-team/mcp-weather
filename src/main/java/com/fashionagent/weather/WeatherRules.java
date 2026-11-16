@@ -10,8 +10,11 @@ public final class WeatherRules {
     /** 체감 온도가 이보다 낮으면 겉옷이 필요하다. */
     public static final double OUTER_BELOW_APPARENT = 20;
 
-    /** 일교차가 이 이상이면 겉옷을 챙긴다. */
+    /** 일교차가 이 이상이면 겉옷을 챙긴다(최저 기온이 {@link #OUTER_BELOW_MIN} 아래일 때만). */
     public static final int BIG_DAILY_RANGE = 10;
+
+    /** 일교차 규칙은 하루 중 가장 쌀쌀한 때가 이보다 낮을 때만 쓴다. 28~39도처럼 더운 날은 일교차가 커도 겉옷이 필요 없다. */
+    public static final double OUTER_BELOW_MIN = 20;
 
     /** 강수 확률이 이 이상이면 우산을 챙긴다. */
     public static final int UMBRELLA_PRECIPITATION = 50;
@@ -50,8 +53,12 @@ public final class WeatherRules {
                 || condition.equals("비") || condition.equals("뇌우");
     }
 
-    /** 체감 20도 미만이거나 일교차가 10도 이상이면 겉옷. */
-    public static boolean needsOuter(double apparentTemperature, double dailyRange) {
-        return apparentTemperature < OUTER_BELOW_APPARENT || Math.round(dailyRange) >= BIG_DAILY_RANGE;
+    /**
+     * 체감 20도 미만이면 겉옷. 일교차가 10도 이상이어도 최저 기온이 20도 아래일 때만 겉옷
+     * (2026-11-16: 최저 28도·최고 39도 여름날에 일교차 11도라 겉옷을 권하던 문제).
+     */
+    public static boolean needsOuter(double apparentTemperature, double dailyRange, double minTemperature) {
+        return apparentTemperature < OUTER_BELOW_APPARENT
+                || (Math.round(dailyRange) >= BIG_DAILY_RANGE && minTemperature < OUTER_BELOW_MIN);
     }
 }

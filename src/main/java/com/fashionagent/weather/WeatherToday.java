@@ -37,7 +37,7 @@ public record WeatherToday(
                 max,
                 range,
                 precipitation,
-                WeatherRules.needsOuter(current.apparentTemperature(), range),
+                WeatherRules.needsOuter(current.apparentTemperature(), range, min),
                 WeatherRules.needsUmbrella(precipitation, condition),
                 WeatherRules.clothingAdvice(current.apparentTemperature()));
     }
