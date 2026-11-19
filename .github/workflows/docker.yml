@@ -1,0 +1,61 @@
+# Docker 이미지를 만들어 GitHub Container Registry(ghcr.io)에 올립니다.
+# - develop에 합쳐지면 :dev, main에 합쳐지면 :latest (둘 다 커밋별 :sha-xxxxxxx 태그도 같이)
+# - PR에서는 빌드만 하고 올리지 않습니다(Dockerfile이 깨졌는지 확인용).
+# 비밀 값은 필요 없습니다. 레포에 기본으로 있는 GITHUB_TOKEN으로 올립니다.
+name: Docker
+
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: 태그 정하기
+        id: tags
+        run: |
+          short="${GITHUB_SHA::7}"
+          case "${GITHUB_REF_NAME}" in
+            develop) echo "tags=${IMAGE}:dev,${IMAGE}:sha-${short}" >> "$GITHUB_OUTPUT" ;;
+            main)    echo "tags=${IMAGE}:latest,${IMAGE}:sha-${short}" >> "$GITHUB_OUTPUT" ;;
+            *)       echo "tags=${IMAGE}:pr-${short}" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: ghcr.io 로그인
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 빌드 (PR이 아니면 올리기)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
