@@ -63,4 +63,11 @@ class WeatherRulesTest {
         assertThat(WeatherRules.needsOuter(26, 12, 20)).isFalse();   // 최저가 딱 20도
         assertThat(WeatherRules.needsOuter(24, 12, 19.5)).isTrue();  // 아침이 쌀쌀함
     }
+
+    @org.junit.jupiter.api.Test
+    void 오늘_날씨_캐시_키에는_서울_날짜가_들어간다() {
+        String key = WeatherService.todayKey(37.56651, 126.97802);
+        org.assertj.core.api.Assertions.assertThat(key)
+                .isEqualTo("37.57,126.98," + java.time.LocalDate.now(java.time.ZoneId.of("Asia/Seoul")));
+    }
 }
