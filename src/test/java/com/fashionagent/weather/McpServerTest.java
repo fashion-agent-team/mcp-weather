@@ -102,8 +102,8 @@ class McpServerTest {
         var date = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Seoul")).plusDays(3);
         when(openMeteo.daily(37.57, 126.98, date)).thenReturn(Samples.daily(date.toString()));
 
-        var result = client.callTool(new McpSchema.CallToolRequest("weather_forecast",
-                Map.of("lat", 37.5665, "lon", 126.9780, "date", date.toString())));
+        var result = client.callTool(McpSchema.CallToolRequest.builder("weather_forecast")
+                .arguments(Map.of("lat", 37.5665, "lon", 126.9780, "date", date.toString())).build());
 
         var text = ((McpSchema.TextContent) result.content().getFirst()).text();
         assertThat(text).contains("\"date\":\"" + date + "\"", "\"condition\":\"비\"", "\"needsUmbrella\":true");
@@ -117,6 +117,6 @@ class McpServerTest {
     }
 
     private McpSchema.CallToolResult call(double lat, double lon) {
-        return client.callTool(new McpSchema.CallToolRequest("weather_today", Map.of("lat", lat, "lon", lon)));
+        return client.callTool(McpSchema.CallToolRequest.builder("weather_today").arguments(Map.of("lat", lat, "lon", lon)).build());
     }
 }
