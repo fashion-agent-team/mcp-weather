@@ -29,6 +29,8 @@ class WeatherToolsTest {
     void badCoordinatesGiveBadRequest() {
         assertThat(code(tools.weatherToday(91, 0))).isEqualTo("bad_request");
         assertThat(code(tools.weatherToday(0, -181))).isEqualTo("bad_request");
+        assertThat(code(tools.weatherToday(Double.NaN, 127))).isEqualTo("bad_request");
+        assertThat(code(tools.weatherToday(37.5, Double.POSITIVE_INFINITY))).isEqualTo("bad_request");
     }
 
     @Test
