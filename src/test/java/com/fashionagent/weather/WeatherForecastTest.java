@@ -70,6 +70,21 @@ class WeatherForecastTest {
         assertThat(code(tools.weatherForecast(37.5, 127, "2026-11-20"))).isEqualTo("upstream_timeout");
     }
 
+    @Test
+    @DisplayName("오늘 날짜(경계)도 예보를 돌려주고, 앞뒤 공백은 무시한다")
+    void todayIsInRange() {
+        when(service.day(37.5, 127, LocalDate.of(2026, 11, 9))).thenReturn(WeatherDay.from(Samples.daily("2026-11-09")));
+        assertThat(tools.weatherForecast(37.5, 127, " 2026-11-09 ")).isInstanceOf(WeatherDay.class);
+    }
+
+    @Test
+    @DisplayName("좌표가 NaN이면 bad request, 서버 오류면 upstream failed")
+    void nanAndServerError() {
+        assertThat(code(tools.weatherForecast(Double.NaN, 127, "2026-11-20"))).isEqualTo("bad_request");
+        when(service.day(anyDouble(), anyDouble(), any())).thenThrow(new IllegalStateException("bad json"));
+        assertThat(code(tools.weatherForecast(37.5, 127, "2026-11-20"))).isEqualTo("upstream_failed");
+    }
+
     @SuppressWarnings("unchecked")
     private static String code(Object result) {
         return ((Map<String, Map<String, String>>) result).get("error").get("code");
