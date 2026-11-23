@@ -51,7 +51,8 @@ public class WeatherService {
     }
 
     /** 좌표를 소수점 2자리로 줄인 뒤 부른다. 캐시 키와 실제 조회 위치가 같아야 해서 여기서 줄인다. */
-    @Cacheable(cacheNames = CACHE, key = "T(com.fashionagent.weather.WeatherService).cacheKey(#lat, #lon)")
+    // 키에 서울 날짜를 넣습니다: 밤 11시 50분에 캐시한 값을 자정 뒤 30분 동안 "오늘" 최저·최고로 읽던 것(2026-11-23 점검).
+    @Cacheable(cacheNames = CACHE, key = "T(com.fashionagent.weather.WeatherService).todayKey(#lat, #lon)")
     public WeatherToday today(double lat, double lon) {
         double a = round2(lat), b = round2(lon);
         return WeatherToday.from(withFallback(() -> openMeteo.forecast(a, b),
@@ -86,6 +87,11 @@ public class WeatherService {
                 throw e;
             }
         }
+    }
+
+    /** 오늘 날씨 캐시 키: 위치 + 서울 날짜. */
+    public static String todayKey(double lat, double lon) {
+        return cacheKey(lat, lon) + "," + LocalDate.now(MetNoClient.SEOUL);
     }
 
     public static String cacheKey(double lat, double lon) {
