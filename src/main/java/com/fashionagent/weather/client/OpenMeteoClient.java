@@ -1,4 +1,4 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.client;
 
 import java.time.Duration;
 import java.time.LocalDate;

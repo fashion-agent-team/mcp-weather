@@ -1,5 +1,7 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.forecast;
 
+import com.fashionagent.weather.client.MetNoClient;
+import com.fashionagent.weather.client.OpenMeteoClient;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -52,7 +54,7 @@ public class WeatherService {
 
     /** 좌표를 소수점 2자리로 줄인 뒤 부른다. 캐시 키와 실제 조회 위치가 같아야 해서 여기서 줄인다. */
     // 키에 서울 날짜를 넣습니다: 밤 11시 50분에 캐시한 값을 자정 뒤 30분 동안 "오늘" 최저·최고로 읽던 것(2026-11-23 점검).
-    @Cacheable(cacheNames = CACHE, key = "T(com.fashionagent.weather.WeatherService).todayKey(#lat, #lon)")
+    @Cacheable(cacheNames = CACHE, key = "T(com.fashionagent.weather.forecast.WeatherService).todayKey(#lat, #lon)")
     public WeatherToday today(double lat, double lon) {
         double a = round2(lat), b = round2(lon);
         return WeatherToday.from(withFallback(() -> openMeteo.forecast(a, b),
@@ -61,7 +63,7 @@ public class WeatherService {
 
     /** 날짜 하루의 예보. 같은 위치·날짜는 30분 캐시한다. */
     @Cacheable(cacheNames = FORECAST_CACHE,
-            key = "T(com.fashionagent.weather.WeatherService).cacheKey(#lat, #lon) + ',' + #date")
+            key = "T(com.fashionagent.weather.forecast.WeatherService).cacheKey(#lat, #lon) + ',' + #date")
     public WeatherDay day(double lat, double lon, LocalDate date) {
         double a = round2(lat), b = round2(lon);
         return WeatherDay.from(withFallback(() -> openMeteo.daily(a, b, date), () -> metNo.daily(a, b, date)));

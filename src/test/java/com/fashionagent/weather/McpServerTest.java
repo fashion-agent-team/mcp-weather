@@ -1,5 +1,8 @@
 package com.fashionagent.weather;
 
+import com.fashionagent.weather.client.MetNoClient;
+import com.fashionagent.weather.client.OpenMeteoClient;
+import com.fashionagent.weather.forecast.WeatherService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.times;

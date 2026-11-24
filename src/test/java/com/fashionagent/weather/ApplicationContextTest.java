@@ -1,5 +1,6 @@
 package com.fashionagent.weather;
 
+import com.fashionagent.weather.client.OpenMeteoClient;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;

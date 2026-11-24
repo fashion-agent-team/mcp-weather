@@ -1,5 +1,7 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.forecast;
 
+import com.fashionagent.weather.Samples;
+import com.fashionagent.weather.client.OpenMeteoForecast;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

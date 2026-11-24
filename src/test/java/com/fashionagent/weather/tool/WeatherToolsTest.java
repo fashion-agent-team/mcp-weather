@@ -1,5 +1,8 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.tool;
 
+import com.fashionagent.weather.Samples;
+import com.fashionagent.weather.forecast.WeatherService;
+import com.fashionagent.weather.forecast.WeatherToday;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.mock;
