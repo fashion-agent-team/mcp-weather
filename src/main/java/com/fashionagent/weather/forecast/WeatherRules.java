@@ -1,4 +1,4 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.forecast;
 
 /**
  * 날씨 코드 → 한국어 상태, 옷차림 힌트 같은 고정 규칙.

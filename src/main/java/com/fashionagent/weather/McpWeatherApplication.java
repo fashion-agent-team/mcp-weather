@@ -1,5 +1,6 @@
 package com.fashionagent.weather;
 
+import com.fashionagent.weather.tool.WeatherTools;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;

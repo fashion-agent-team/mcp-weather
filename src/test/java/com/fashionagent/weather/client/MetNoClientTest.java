@@ -1,5 +1,8 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.client;
 
+import com.fashionagent.weather.forecast.WeatherDay;
+import com.fashionagent.weather.forecast.WeatherRules;
+import com.fashionagent.weather.forecast.WeatherToday;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.startsWith;

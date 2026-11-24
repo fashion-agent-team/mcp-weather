@@ -1,5 +1,6 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.tool;
 
+import com.fashionagent.weather.forecast.WeatherService;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;

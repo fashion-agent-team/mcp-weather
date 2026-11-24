@@ -1,5 +1,6 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.forecast;
 
+import com.fashionagent.weather.client.OpenMeteoDaily;
 import java.util.List;
 
 /**

@@ -1,5 +1,6 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.forecast;
 
+import com.fashionagent.weather.client.OpenMeteoForecast;
 import java.util.List;
 
 /** weather_today 도구의 출력. 모양은 앱 레포 docs/contracts/mcp-tools.md를 따른다. */
