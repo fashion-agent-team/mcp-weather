@@ -1,4 +1,4 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +25,7 @@ import org.springframework.web.client.RestClient;
 @Component
 public class MetNoClient {
 
-    static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
+    public static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     static final String USER_AGENT = "fashion-agent-mcp-weather/0.1 github.com/fashion-agent-team/mcp-weather";
 
     private final RestClient restClient;

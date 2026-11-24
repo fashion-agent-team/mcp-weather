@@ -1,4 +1,4 @@
-package com.fashionagent.weather;
+package com.fashionagent.weather.forecast;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
